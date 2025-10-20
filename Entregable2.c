@@ -12,7 +12,7 @@ int main(void){
     sigaction(SIGUSR1,act.sa_handler=signalHandler,NULL);
     sigaction(SIGUSR2,act.sa_handler=signalHandler,NULL);
     
-    printf("Soy el padre y mi pid es %d", getpid());
+    printf("Soy el padre y mi pid es %d\n", getpid());
 
     pid_t hijo1 = fork();
 
@@ -21,21 +21,21 @@ int main(void){
         pid_t hijo2 = fork();
         if(hijo2 == 0){
             printf("Soy el proceso nieto y mi pid es: %d", getpid());
-
             exit(56);
         }
         else{
-            printf("No se pudo crear");
-            
+            printf("No se pudo crear el proceso nieto\n");
+            return;
         }
         exit(42);
     }
     else{
 
-        printf("El hijo no se pudo crear");
+        printf("El hijo 1 no se pudo crear\n");
         return;
 
     }
+    wait();
 
     pid_t pidhijo = wait(&status0);
         printf("El proceso hijo %d ya terminó con código %d\n",pidhijo,WEXITSTATUS(status0));
