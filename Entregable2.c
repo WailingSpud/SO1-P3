@@ -3,47 +3,60 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
-void signalHandler(int señal);
+void manejador(int sig);
+
 int main(void){
 
     struct sigaction act;
-    int status0, status1;
-    sigaction(SIGUSR1,act.sa_handler=signalHandler,NULL);
-    sigaction(SIGUSR2,act.sa_handler=signalHandler,NULL);
+    sigset_t mask, pending;
+
+    act.sa_handler = manejador;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_RESTART;
+    sigaction(SIGUSR1, &act, NULL);
+    sigaction(SIGUSR2, &act, NULL);
     
-    printf("Soy el padre y mi pid es %d\n", getpid());
+    int status0, status1;
+    
+    sigset_t mask, pending;
+    
+    pid_t proceso_padre =  getpid();
+
+    printf("Soy el padre y mi pid es %d\n", proceso_padre);
 
     pid_t hijo1 = fork();
 
     if(hijo1 == 0){
         printf("Soy el hijo 1 y voy a crear otro hijo, mi pid es: %d\n", getpid());
+
         pid_t hijo2 = fork();
+
         if(hijo2 == 0){
-            printf("Soy el proceso nieto y mi pid es: %d", getpid());
-            exit(56);
+            printf("Soy el proceso nieto y mi pid es: %d\n", getpid());
+            kill(proceso_padre,SIGUSR2);
+            sleep(5);
+            exit(22);
         }
-        else{
-            printf("No se pudo crear el proceso nieto\n");
-            return;
-        }
+        
+        kill(proceso_padre, SIGUSR1);
+        wait(&status1);
         exit(42);
-    }
-    else{
 
-        printf("El hijo 1 no se pudo crear\n");
-        return;
-
-    }
-    wait();
-
+        }
+        
     pid_t pidhijo = wait(&status0);
-        printf("El proceso hijo %d ya terminó con código %d\n",pidhijo,WEXITSTATUS(status0));
+
+    printf("El proceso hijo %d ya terminó con código %d\n",pidhijo,WEXITSTATUS(status0));
+    
         
     return 0;
 }
 
-void signalHandler( int señal ){
-    printf("Mi numero de señal es: %d\n", señal);
-    
+void manejador(int sig) {
+    if (sig == SIGUSR1)
+        printf("Proceso %d recibió SIGUSR1\n", getpid());
+    else if (sig == SIGUSR2)
+        printf("Proceso %d recibió SIGUSR2\n", getpid());
 }
